@@ -2,7 +2,6 @@ import pyautogui
 import keyboard
 import sys
 import time
-
 stop = False
 
 def stop_execution():
