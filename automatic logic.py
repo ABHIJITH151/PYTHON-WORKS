@@ -12,6 +12,7 @@ def stop_execution():
 keyboard.add_hotkey('esc', stop_execution)
 
 # Add a delay to allow the hotkey registration to take effect
+
 time.sleep(1)
 
 for i in range(1):
@@ -30,6 +31,8 @@ for i in range(1):
         pyautogui.sleep(2)
         pyautogui.typewrite('https://webmail.mail.dnyan.co.in/')
         pyautogui.press('enter')
+        if stop:
+            break
         pyautogui.sleep(8)
         pyautogui.typewrite('abhijith.ks@mail.dnyan.co.in')
         pyautogui.press('tab')
