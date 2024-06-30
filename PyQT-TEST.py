@@ -12,7 +12,6 @@ class MyApp(QWidget):
     def initUI(self):
         layout = QVBoxLayout()
         self.label = QLabel('Hello, ABHIJITH')
-        layout.addWidget(self.label)
         self.button = QPushButton('Click me')
         self.button.clicked.connect(self.on_button_click)
         layout.addWidget(self.button)
