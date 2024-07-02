@@ -96,20 +96,34 @@ class MyApp(QWidget):
 
     def execute_login(self):
         try:
-            pyautogui.press('win')
-            pyautogui.sleep(1)
-            pyautogui.typewrite('google')
-            pyautogui.sleep(1)
-            pyautogui.press('enter')
-            pyautogui.sleep(2)
-            pyautogui.typewrite('https://webmail.mail.dnyan.co.in/')
-            pyautogui.press('enter')
-            pyautogui.sleep(8)
-            pyautogui.typewrite('abhijith.ks@mail.dnyan.co.in')
-            pyautogui.press('tab')
-            pyautogui.typewrite('Abhijith@111#')
-            pyautogui.press('enter')
-            pyautogui.press('enter')
+
+
+            for i in range(1):
+                if stop:
+                    break
+                else:
+                    pyautogui.press('win')
+                    pyautogui.sleep(1)
+                    pyautogui.typewrite('google')
+                    if stop:
+                        break
+                    pyautogui.sleep(1)
+                    pyautogui.press('enter')
+                    if stop:
+                        break
+                    pyautogui.sleep(2)
+                    pyautogui.typewrite('https://webmail.mail.dnyan.co.in/')
+                    pyautogui.press('enter')
+                    if stop:
+                        break
+                    pyautogui.sleep(8)
+                    pyautogui.typewrite('abhijith.ks@mail.dnyan.co.in')
+                    pyautogui.press('tab')
+                    pyautogui.typewrite('Abhijith@111#')
+                    pyautogui.press('enter')
+                    if stop:
+                        break
+                    pyautogui.press('enter')
         except Exception as e:
             print(f"An error occurred during login: {e}")
             self.show_error_message("Login Error", f"An error occurred during login: {e}")
