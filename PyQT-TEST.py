@@ -1,10 +1,10 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QPushButton, QGridLayout
-from PyQt5.QtGui import QFont  # Import QFont for font customization
-from PyQt5.QtCore import Qt  # Import Qt for alignment
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QSpacerItem, QSizePolicy, QMessageBox
+from PyQt5.QtGui import QFont, QColor
+from PyQt5.QtCore import Qt, QTimer
 import pyautogui
 import keyboard
-import time
+import threading
 
 stop = False
 
@@ -16,71 +16,63 @@ class MyApp(QWidget):
     def initUI(self):
         layout = QVBoxLayout()
 
-        # Create and configure the label
-        self.label = QLabel('Hello, ABHIJITH')
-        self.label.setAlignment(Qt.AlignCenter)  # Center align the label horizontally
-        self.label.setStyleSheet('color: white;')  # Set text color to white
-        layout.addWidget(self.label)
+        # Add QLabel for "Have a nice day" with custom font size and style
+        self.nice_day_label = QLabel('Hello, ABHIJITH 😊')
+        self.nice_day_label.setAlignment(Qt.AlignCenter)
+        font = QFont('Arial', 20, QFont.Bold)
+        self.nice_day_label.setFont(font)
+        self.nice_day_label.setStyleSheet('color: white;')
+        layout.addWidget(self.nice_day_label)
 
-        # Create grid layout for buttons
-        grid_layout = QGridLayout()
+        # Set window background color to black using stylesheet
+        self.setStyleSheet('background-color: black;')
+
+        # Create horizontal layout for buttons and spacer
+        button_layout = QHBoxLayout()
 
         # Create and configure the buttons
-        button_labels = [f'Button {i+1}' for i in range(50)]
+        button_labels = [f'Button {i+1}' for i in range(10)]
 
-        positions = [(i, j) for i in range(10) for j in range(5)]  # 10 rows, 5 columns for 50 buttons
+        colors = ['#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300']
 
         self.buttons = []
-        colors = ['#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300',
-                  '#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300',
-                  '#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300',
-                  '#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300',
-                  '#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300',
-                  '#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300',
-                  '#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300',
-                  '#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300',
-                  '#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300',
-                  '#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300']
-
         for index, label in enumerate(button_labels):
             button = QPushButton(label)
             button.clicked.connect(self.on_button_click)
-            if index < len(colors):
-                button.setStyleSheet(f'background-color: {colors[index]}; color: white; border: none;')
-            else:
-                button.setStyleSheet('color: white; border: none;')
-            button.setMinimumWidth(200)  # Set minimum width for the buttons
-            button.setMinimumHeight(80)  # Set minimum height for the buttons
-            grid_layout.addWidget(button, *positions[index])
+            button.setStyleSheet('''
+                QPushButton {
+                    background-color: %s;
+                    color: white;
+                    border: none;
+                    min-width: 100px;
+                    min-height: 60px;
+                }
+                QPushButton:hover {
+                    background-color: %s;
+                    border: 2px solid white;
+                    border-radius: 5px;
+                }
+            ''' % (colors[index % len(colors)], QColor(colors[index % len(colors)]).darker().name()))
+
+            button_layout.addWidget(button)  # Add buttons to the horizontal layout
             self.buttons.append(button)
 
-        # Add grid layout to main layout
-        layout.addLayout(grid_layout)
+        # Add horizontal layout to main layout
+        layout.addLayout(button_layout)
 
         # Add stretch to push widgets to the top
         layout.addStretch()
 
-        # Add QLabel for "Have a nice day" with custom font size and style
-        self.nice_day_label = QLabel('Have a nice day 😊')  # Added a smiley emoji
-        self.nice_day_label.setAlignment(Qt.AlignCenter)  # Center align the text horizontally
-        font = QFont('Arial', 36, QFont.Bold)  # Example: Arial font, size 36, bold
-        self.nice_day_label.setFont(font)
-        self.nice_day_label.setStyleSheet('color: white;')  # Set text color to white
-        layout.addWidget(self.nice_day_label)
-
         self.setLayout(layout)
 
-        # Show the window maximized (full-screen mode with taskbar visible)
+        # Show the window maximized
         self.showMaximized()
-
-        # Set window background color to black using stylesheet
-        self.setStyleSheet('background-color: black;')
 
         self.setWindowTitle('My PyQt App')
 
     def on_button_click(self):
         button = self.sender()
-        self.label.setText(f'{button.text()} clicked')
+        self.nice_day_label.setText(f'{button.text()} clicked')
 
         # Check if the button text matches 'Button 1' for the first button
         if button.text() == 'Button 1':
@@ -89,44 +81,45 @@ class MyApp(QWidget):
         # Add conditions for other buttons if needed
 
     def perform_login(self):
-        self.label.setText('LOGIN button clicked')
+        self.nice_day_label.setText('LOGIN button clicked')
 
         def stop_execution():
-            global stop  # Use global instead of nonlocal for a global variable
+            global stop
             print("Execution stopped.")
             stop = True
 
         keyboard.add_hotkey('esc', stop_execution)
 
-        # Add a delay to allow the hotkey registration to take effect
-        time.sleep(1)
+        # Use threading to avoid blocking the GUI
+        thread = threading.Thread(target=self.execute_login)
+        thread.start()
 
-        for i in range(1):
-            if stop:
-                break
-            else:
-                pyautogui.press('win')
-                pyautogui.sleep(1)
-                pyautogui.typewrite('google')
-                if stop:
-                    break
-                pyautogui.sleep(1)
-                pyautogui.press('enter')
-                if stop:
-                    break
-                pyautogui.sleep(2)
-                pyautogui.typewrite('https://webmail.mail.dnyan.co.in/')
-                pyautogui.press('enter')
-                if stop:
-                    break
-                pyautogui.sleep(8)
-                pyautogui.typewrite('abhijith.ks@mail.dnyan.co.in')
-                pyautogui.press('tab')
-                pyautogui.typewrite('Abhijith@111#')
-                pyautogui.press('enter')
-                if stop:
-                    break
-                pyautogui.press('enter')
+    def execute_login(self):
+        try:
+            pyautogui.press('win')
+            pyautogui.sleep(1)
+            pyautogui.typewrite('google')
+            pyautogui.sleep(1)
+            pyautogui.press('enter')
+            pyautogui.sleep(2)
+            pyautogui.typewrite('https://webmail.mail.dnyan.co.in/')
+            pyautogui.press('enter')
+            pyautogui.sleep(8)
+            pyautogui.typewrite('abhijith.ks@mail.dnyan.co.in')
+            pyautogui.press('tab')
+            pyautogui.typewrite('Abhijith@111#')
+            pyautogui.press('enter')
+            pyautogui.press('enter')
+        except Exception as e:
+            print(f"An error occurred during login: {e}")
+            self.show_error_message("Login Error", f"An error occurred during login: {e}")
+
+    def show_error_message(self, title, message):
+        msg = QMessageBox()
+        msg.setWindowTitle(title)
+        msg.setText(message)
+        msg.setIcon(QMessageBox.Critical)
+        msg.exec_()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
