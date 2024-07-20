@@ -1,14 +1,15 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QSpacerItem, QSizePolicy, QMessageBox
+from PyQt5.QtWidgets import (QApplication, QLabel, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QMessageBox,
+                             QRadioButton, QLineEdit)
 from PyQt5.QtGui import QFont, QColor
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt
+import threading
 import pyautogui
 import keyboard
-import threading
 
 stop = False
 
-class MyApp(QWidget):
+class SignalScaler(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -16,24 +17,105 @@ class MyApp(QWidget):
     def initUI(self):
         layout = QVBoxLayout()
 
-        # Add QLabel for "Have a nice day" with custom font size and style
+        # Signal Type Selection
+        self.radio0_20 = QRadioButton("0-20mA")
+        self.radio4_20 = QRadioButton("4-20mA")
+        self.radio0_20.setChecked(True)
+
+        layout.addWidget(QLabel("SIGNAL TYPE"))
+        layout.addWidget(self.radio0_20)
+        layout.addWidget(self.radio4_20)
+
+        # Input for Y1 and Y2
+        layout.addWidget(QLabel("BOTTOM SCALE (Y1)"))
+        self.inputY1 = QLineEdit()
+        layout.addWidget(self.inputY1)
+
+        layout.addWidget(QLabel("TOP SCALE (Y2)"))
+        self.inputY2 = QLineEdit()
+        layout.addWidget(self.inputY2)
+
+        # Input for X (current value)
+        layout.addWidget(QLabel("Input Current Value (mA)"))
+        self.inputX = QLineEdit()
+        self.inputX.textChanged.connect(self.updateScaledValue)
+        layout.addWidget(self.inputX)
+
+        # Scaled Value Input
+        layout.addWidget(QLabel("Scaled Value (Y)"))
+        self.inputY = QLineEdit()
+        self.inputY.textChanged.connect(self.updateCurrentValue)
+        layout.addWidget(self.inputY)
+
+        # Calculate Button
+        self.calculateBtn = QPushButton("Calculate")
+        self.calculateBtn.clicked.connect(self.calculateScaledValue)
+        layout.addWidget(self.calculateBtn)
+
+        self.setLayout(layout)
+        self.setStyleSheet('background-color: white; color: black;')
+
+    def calculateScaledValue(self):
+        X1, X2 = (0, 20) if self.radio0_20.isChecked() else (4, 20)
+        try:
+            Y1 = float(self.inputY1.text())
+            Y2 = float(self.inputY2.text())
+            X = float(self.inputX.text())
+            Y = ((X - X1) * (Y2 - Y1) / (X2 - X1)) + Y1
+            self.inputY.setText(f"{Y:.2f}")
+        except ValueError:
+            self.inputY.setText("Invalid input")
+        except ZeroDivisionError:
+            self.inputY.setText("Division by zero")
+
+    def updateScaledValue(self):
+        X1, X2 = (0, 20) if self.radio0_20.isChecked() else (4, 20)
+        try:
+            Y1 = float(self.inputY1.text())
+            Y2 = float(self.inputY2.text())
+            X = float(self.inputX.text())
+            Y = ((X - X1) * (Y2 - Y1) / (X2 - X1)) + Y1
+            self.inputY.setText(f"{Y:.2f}")
+        except ValueError:
+            pass
+
+    def updateCurrentValue(self):
+        X1, X2 = (0, 20) if self.radio0_20.isChecked() else (4, 20)
+        try:
+            Y1 = float(self.inputY1.text())
+            Y2 = float(self.inputY2.text())
+            Y = float(self.inputY.text())
+            X = ((Y - Y1) * (X2 - X1) / (Y2 - Y1)) + X1
+            self.inputX.setText(f"{X:.2f}")
+        except ValueError:
+            pass
+
+class MyApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.stack = QWidget()
+        self.stack_layout = QVBoxLayout()
+
+        # Add QLabel for "Hello, ABHIJITH 😊" with custom font size and style
         self.nice_day_label = QLabel('Hello, ABHIJITH 😊')
         self.nice_day_label.setAlignment(Qt.AlignCenter)
         font = QFont('Arial', 20, QFont.Bold)
         self.nice_day_label.setFont(font)
         self.nice_day_label.setStyleSheet('color: white;')
-        layout.addWidget(self.nice_day_label)
+        self.stack_layout.addWidget(self.nice_day_label)
 
         # Set window background color to black using stylesheet
-        self.setStyleSheet('background-color: black;')
+        self.stack.setStyleSheet('background-color: black;')
 
         # Create horizontal layout for buttons and spacer
         button_layout = QHBoxLayout()
 
         # Create and configure the buttons
-        button_labels = [f'Button {i+1}' for i in range(10)]
-
-        colors = ['#FF5733', '#C70039', '#900C3F', '#581845', '#FFC300']
+        button_labels = ['Button 1', 'Button 2']
+        colors = ['#FF5733', '#C70039']
 
         self.buttons = []
         for index, label in enumerate(button_labels):
@@ -52,33 +134,29 @@ class MyApp(QWidget):
                     border: 2px solid white;
                     border-radius: 5px;
                 }
-            ''' % (colors[index % len(colors)], QColor(colors[index % len(colors)]).darker().name()))
+            ''' % (colors[index], QColor(colors[index]).darker().name()))
 
             button_layout.addWidget(button)  # Add buttons to the horizontal layout
             self.buttons.append(button)
 
-        # Add horizontal layout to main layout
-        layout.addLayout(button_layout)
+        self.stack_layout.addLayout(button_layout)
+        self.stack_layout.addStretch()
 
-        # Add stretch to push widgets to the top
-        layout.addStretch()
-
-        self.setLayout(layout)
+        self.stack.setLayout(self.stack_layout)
 
         # Show the window maximized
+        self.setLayout(QVBoxLayout())
+        self.layout().addWidget(self.stack)
         self.showMaximized()
 
         self.setWindowTitle('My PyQt App')
 
     def on_button_click(self):
         button = self.sender()
-        self.nice_day_label.setText(f'{button.text()} clicked')
-
-        # Check if the button text matches 'Button 1' for the first button
         if button.text() == 'Button 1':
             self.perform_login()
-
-        # Add conditions for other buttons if needed
+        elif button.text() == 'Button 2':
+            self.show_signal_scaler_popup()
 
     def perform_login(self):
         self.nice_day_label.setText('LOGIN button clicked')
@@ -96,8 +174,6 @@ class MyApp(QWidget):
 
     def execute_login(self):
         try:
-
-
             for i in range(1):
                 if stop:
                     break
@@ -134,6 +210,19 @@ class MyApp(QWidget):
         msg.setText(message)
         msg.setIcon(QMessageBox.Critical)
         msg.exec_()
+
+    def show_signal_scaler_popup(self):
+        self.signal_scaler_popup = QWidget()
+        self.signal_scaler_popup.setWindowTitle("Signal Scaler")
+        self.signal_scaler_popup.setGeometry(100, 100, 400, 300)
+        layout = QVBoxLayout()
+
+        # Add SignalScaler widget to popup
+        self.signal_scaler = SignalScaler()
+        layout.addWidget(self.signal_scaler)
+
+        self.signal_scaler_popup.setLayout(layout)
+        self.signal_scaler_popup.show()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
